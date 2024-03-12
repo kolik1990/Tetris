@@ -5,11 +5,10 @@ export default class Game {
     3: 300,
     4: 1200,
   };
-  score = 0;
-  lines = 0;
-  playfield = this.createPlayfield();
-  activePiece = this.createPiece();
-  nextPiece = this.createPiece();
+
+  constructor() {
+    this.reset();
+  }
 
   get level() {
     return Math.floor(this.lines * 0.1);
@@ -35,25 +34,42 @@ export default class Game {
     }
 
     return {
+      score: this.score,
+      level: this.level,
+      lines: this.lines,
+      nextPiece: this.nextPiece,
       playfield,
+      isGameOver: this.topOut,
     };
+  }
+  reset() {
+    this.score = 0;
+    this.lines = 0;
+    this.topOut = false;
+    this.playfield = this.createPlayfield();
+    this.activePiece = this.createPiece();
+    this.nextPiece = this.createPiece();
   }
 
   createPlayfield() {
     const playfield = [];
+
     for (let y = 0; y < 20; y++) {
       playfield[y] = [];
+
       for (let x = 0; x < 10; x++) {
         playfield[y][x] = 0;
       }
     }
+
     return playfield;
   }
 
   createPiece() {
     const index = Math.floor(Math.random() * 7);
-    const type = "IJLOSTZ"[index];
+    let type = "IJLOSTZ"[index];
     const piece = {};
+
     switch (type) {
       case "I":
         piece.blocks = [
@@ -93,24 +109,23 @@ export default class Game {
         ];
         break;
       case "T":
-        piece.bloks = [
+        piece.blocks = [
           [0, 0, 0],
           [6, 6, 6],
           [0, 6, 0],
         ];
         break;
       case "Z":
-        piece.block = [
+        piece.blocks = [
           [0, 0, 0],
           [7, 7, 0],
           [0, 7, 7],
         ];
-      default:
-        return;
-      // throw new Error("Неизвестный тип фигуры");
     }
-    piece.x = Math.floor((10 - piece.blocks.length) / 2);
+
+    piece.x = Math.floor((10 - piece.blocks[0].length) / 2);
     piece.y = -1;
+
     return piece;
   }
 
@@ -129,6 +144,7 @@ export default class Game {
   }
 
   movePieceDown() {
+    if (this.topOut) return;
     this.activePiece.y += 1;
     if (this.hasCollision()) {
       this.activePiece.y -= 1;
@@ -136,6 +152,10 @@ export default class Game {
       const clearedLines = this.clearLines();
       this.updateScore(clearedLines);
       this.updatePieces();
+    }
+
+    if (this.hasCollision()) {
+      this.topOut = true;
     }
   }
 
